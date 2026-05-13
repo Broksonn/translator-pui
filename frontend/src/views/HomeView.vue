@@ -2,49 +2,53 @@
 import { ref } from 'vue'
 import axios from 'axios'
 
-// 1. Reaktywne zmienne (pamięć komponentu)
+// 1. Reaktywne zmienne
 const sourceText = ref('')
 const translatedText = ref('')
 const sourceLang = ref('auto')
 const targetLang = ref('pl')
 
+// Licznik dla mechanizmu opóźnienia (debouncing)
+let timeout = null
+
 // 2. Funkcja wysyłająca zapytanie do serwera Bartka
-const translate = async () => {
-  // Jeśli nie ma tekstu, czyścimy wynik i nie męczymy serwera
+const translate = () => {
+  // Czyścimy poprzedni licznik, jeśli użytkownik nadal pisze
+  clearTimeout(timeout)
+
+  // Jeśli pole jest puste, czyścimy wynik i nie wysyłamy zapytania
   if (sourceText.value.trim() === '') {
     translatedText.value = ''
     return
   }
 
-  try {
-    // Adres Twojego lokalnego backendu w Django
-    // NOWA WERSJA (Poprawna)
-const response = await axios.post('http://127.0.0.1:8000/api/translate/', {
-  text: sourceText.value,
-  lang: targetLang.value    // <-- Zmiana nazwy klucza na "lang" (tego szuka Bartek!)
-})
-    
-    // Zakładamy, że Bartek odsyła JSON z polem 'translated_text'
-    translatedText.value = response.data.translated_text
-  } catch (error) {
-    console.error("Błąd połączenia z backendem:", error)
-    translatedText.value = "Błąd: Nie udało się połączyć z serwerem tłumaczeń."
-  }
+  // Ustawiamy opóźnienie 500ms, aby nie blokować API przy każdej literce
+  timeout = setTimeout(async () => {
+    try {
+      const response = await axios.post('http://127.0.0.1:8000/api/translate/', {
+        text: sourceText.value,
+        source_lang: sourceLang.value,
+        lang: targetLang.value
+      })
+      
+      translatedText.value = response.data.translated_text
+    } catch (error) {
+      console.error("Błąd połączenia z backendem:", error)
+      translatedText.value = "Błąd: Nie udało się połączyć z serwerem tłumaczeń."
+    }
+  }, 500) 
 }
 
-// 3. Funkcja zamiany języków miejscami (guzik na środku)
+// 3. Funkcja zamiany języków miejscami
 const swapLanguages = () => {
-  // Zamieniamy wybrane języki
   const tempLang = sourceLang.value
   sourceLang.value = targetLang.value
-  targetLang.value = tempLang === 'auto' ? 'en' : tempLang // 'auto' nie może być językiem docelowym
+  targetLang.value = tempLang === 'auto' ? 'en' : tempLang 
 
-  // Zamieniamy też teksty
   const tempText = sourceText.value
   sourceText.value = translatedText.value
   translatedText.value = tempText
 
-  // Odświeżamy tłumaczenie po zamianie
   translate()
 }
 </script>

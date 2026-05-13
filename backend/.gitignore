@@ -1,11 +1,22 @@
-# Baza danych
+# Środowisko wirtualne (widoczne na Twoim screenie)
+venv/
+env/
+.venv/
+
+# Baza danych (widoczna na Twoim screenie jako db.sqlite3)
+*.sqlite3
 db.sqlite3
 
-# Pliki tymczasowe i cache
+# Pliki tymczasowe Pythona (widoczne jako __pycache__)
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Środowiska wirtualne
-venv/
-env/
+# Ustawienia edytora i systemowe Maca
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Pozostałe
+.env
+*.log
